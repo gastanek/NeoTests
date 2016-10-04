@@ -1,6 +1,7 @@
 import random
 import time
 import multiprocessing
+import sys
 from neo4j.v1 import GraphDatabase, basic_auth
 
 #txn execution process
@@ -25,22 +26,28 @@ def executeTxns(top, ppid):
             except:
                 print("Transcaction failed")
                 txn.success = False
-        #cursession.close()
+        cursession.close()
         i += 1
     print("Done with pool txns for " + str(ppid))
 
 if __name__ == '__main__':
 
+    if len(sys.argv) != 3:
+        print(len(sys.argv))
+        print("Invalid number of arguments.  Provide a number of txns and number of processes per txn to run.")
+        sys.exit(2)
+
+    top = int(sys.argv[1])
+    processes = int(sys.argv[2])
+
     driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "password"))
     names = ['Tod', 'Jen', 'Frank', 'Sarah', 'Alan', 'Andy']
-    top = 1000000
-    processes = 3
 
     sessions = []
     for n in range(processes):
         sessions.append(driver.session())
 
-    #clear the db
+    # clear the db
     session = driver.session()
     session.run("match (a)-[c]-(b) delete a,c,b")
     session.close()
@@ -54,20 +61,16 @@ if __name__ == '__main__':
     topper = [top]
     workers = []
     for num in range(processes):
-        p=multiprocessing.Process(target=executeTxns, args=(topper, num))
+        p = multiprocessing.Process(target=executeTxns, args=(topper, num))
         workers.append(p)
         p.start()
-
 
     for worker in workers:
         worker.join()
 
     end = time.time()
-    eltime = end-start
+    eltime = end - start
     print(str(eltime) + ' seconds to complete parameterized version')
 
-#close off our sessions
-for proc in sessions:
-    proc.close()
 
 
