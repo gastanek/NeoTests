@@ -5,6 +5,8 @@ Main runnable python script to create and test data
 import createdata
 import commandlineconvo
 import checkDB
+import cleanupdb
+import timer
 
 if __name__ == '__main__':
 
@@ -21,5 +23,17 @@ if __name__ == '__main__':
     responses = commandlineconvo.getResponses()
     print(str(responses))
 
+    if responses[0] == 1:
+        #we have been asked to delete the db
+        if dbstats[1] > 100000:
+            print("You've got a bit of a big DB, this may take a moment")
+            cleanupdb.deleteDatabase()
+            print("All done clearing out your DB...you are ready to start fresh.")
+        else:
+            cleanupdb.deleteDatabase()
+
     #now we know what to do, time to execute
+    now = timer.startTime()
     createdata.runDataGen(responses)
+    later = timer.endTime()
+    print(str(later - now) + " seconds building that graph")
