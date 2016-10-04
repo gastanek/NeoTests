@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     end = time.time()
     eltime = end - start
-    print(str(eltime) + ' seconds to complete parameterized version')
+    print(str(eltime) + ' seconds to complete the graph')
 
 
 
