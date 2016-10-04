@@ -4,6 +4,10 @@ import multiprocessing
 import sys
 from neo4j.v1 import GraphDatabase, basic_auth
 
+driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "password"))
+names = ['Tod', 'Jen', 'Frank', 'Sarah', 'Alan', 'Andy']
+sessions = []
+
 #txn execution process
 def executeTxns(top, ppid):
     print("Starting " + str(top[0]) + " pool txns for process " + str(ppid))
@@ -30,6 +34,24 @@ def executeTxns(top, ppid):
         i += 1
     print("Done with pool txns for " + str(ppid))
 
+def runDataGen(dimensions):
+    #get number of txns
+    top = dimensions[1]
+    processes = dimensions[2]
+
+    for n in range(processes):
+        sessions.append(driver.session())
+
+    topper = [top]
+    workers = []
+    for num in range(processes):
+        p = multiprocessing.Process(target=executeTxns, args=(topper, num))
+        workers.append(p)
+        p.start()
+
+    for worker in workers:
+        worker.join()
+
 if __name__ == '__main__':
 
     if len(sys.argv) != 3:
@@ -39,9 +61,6 @@ if __name__ == '__main__':
 
     top = int(sys.argv[1])
     processes = int(sys.argv[2])
-
-    driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "password"))
-    names = ['Tod', 'Jen', 'Frank', 'Sarah', 'Alan', 'Andy']
 
     sessions = []
     for n in range(processes):
