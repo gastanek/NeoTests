@@ -38,3 +38,4 @@ if __name__ == '__main__':
     createRelationships.runRelGen(responses)
     later = timer.endTime()
     print(str(later - now) + " seconds building that graph")
+    print("We're all done here.  Now we can do other things.")
