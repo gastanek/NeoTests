@@ -55,7 +55,7 @@ if __name__ == '__main__':
     start = time.time()
     print(str(start) + ' is the start time')
 
-    multiprocessing.set_start_method('fork')
+    #multiprocessing.set_start_method('fork')
 
     print(str(multiprocessing.cpu_count()) + ' is the total CPU count')
     topper = [top]
