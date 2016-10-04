@@ -1,3 +1,8 @@
+'''
+Module to create requested nodes in the db
+This creates nodes that we'll connect with relationships
+'''
+
 import random
 import time
 import multiprocessing
@@ -9,23 +14,19 @@ names = []
 sessions = []
 
 #txn execution process
-def executeTxns(top, ppid):
-    print("Starting " + str(top[0]) + " pool txns for process " + str(ppid))
+def executeTxns(rels, nodes, ppid):
+    #rels is the number of relationships we create per process
+    #nodes is the number of nodes in the db
+    print("Creating " + str(rels[0]) + " relationships with process " + str(ppid))
     i = 0
     cursession = sessions[ppid]
-    while i < top[0]:
-        parameters = {'id': random.randint(1, 3500), 'name': names[random.randint(0, 5)],
-                      'idto': random.randint(1, 3500),
-                      'nameto': names[random.randint(0, 5)]}
+    while i < rels[0]:
+        #match two random ids and the create the relationship between them
+        statement = "MATCH (a:Person {id:" + str(random.randint(1,nodes[0])) + "}) with a MATCH (b:Person {id:" + str(random.randint(1,nodes[0])) + "}) with a,b CREATE (a)-[:FOLLOWS]->(b)"
         with cursession.begin_transaction() as txn:
             try:
-                result = txn.run("MERGE (a:Person {id: {id}, name: {name}}) "
-                        "MERGE (b:Person {id: {idto}, name: {nameto}})"
-                        "MERGE (a)-[:FOLLOWS]->(b)", parameters)
+                result = txn.run(statement)
                 summary = result.consume()
-                #for record in result:
-                    #do absolutely nothing but loop through them
-                #    print(record)
                 txn.success = True
             except:
                 print("Transcaction failed")
@@ -34,26 +35,28 @@ def executeTxns(top, ppid):
         i += 1
     print("Done with pool txns for " + str(ppid))
 
-def runDataGen(dimensions):
+def runRelGen(dimensions):
 
     # Dimensions
     # [0] = delete existing db?
     # [1] = number of nodes to use?
     # [2] = number of properties per node?
-    # [3] = number of txns?
+    # [3] = number of rels?
     # [4] = number of processes?
 
     #get number of txns
-    top = dimensions[3]
+    nodeCount = dimensions[1]
+    relCount = dimensions[3]
     processes = dimensions[4]
 
     for n in range(processes):
         sessions.append(driver.session())
 
-    topper = [top]
+    rels = [relCount/processes]
+    nodes = [nodeCount]
     workers = []
     for num in range(processes):
-        p = multiprocessing.Process(target=executeTxns, args=(topper, num))
+        p = multiprocessing.Process(target=executeTxns, args=(rels, nodes, num))
         workers.append(p)
         p.start()
 
@@ -62,13 +65,14 @@ def runDataGen(dimensions):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print(len(sys.argv))
         print("Invalid number of arguments.  Provide a number of txns and number of processes per txn to run.")
         sys.exit(2)
 
     top = int(sys.argv[1])
-    processes = int(sys.argv[2])
+    props = int(sys.argv[2])
+    processes = int(sys.argv[3])
 
     sessions = []
     for n in range(processes):
@@ -86,9 +90,10 @@ if __name__ == '__main__':
 
     print(str(multiprocessing.cpu_count()) + ' is the total CPU count')
     topper = [top]
+    propper = [props]
     workers = []
     for num in range(processes):
-        p = multiprocessing.Process(target=executeTxns, args=(topper, num))
+        p = multiprocessing.Process(target=executeTxns, args=(topper, propper, num))
         workers.append(p)
         p.start()
 

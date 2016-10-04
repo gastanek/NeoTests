@@ -2,7 +2,7 @@
 Main runnable python script to create and test data
 '''
 
-import createdata
+import createdata, createNodes, createRelationships
 import commandlineconvo
 import checkDB
 import cleanupdb
@@ -21,7 +21,6 @@ if __name__ == '__main__':
 
     #interactive command line conversation
     responses = commandlineconvo.getResponses()
-    print(str(responses))
 
     if responses[0] == 1:
         #we have been asked to delete the db
@@ -34,6 +33,8 @@ if __name__ == '__main__':
 
     #now we know what to do, time to execute
     now = timer.startTime()
-    createdata.runDataGen(responses)
+    #createdata.runDataGen(responses)
+    createNodes.runDataGen(responses)
+    createRelationships.runRelGen(responses)
     later = timer.endTime()
     print(str(later - now) + " seconds building that graph")
