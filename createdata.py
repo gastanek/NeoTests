@@ -1,3 +1,8 @@
+'''
+Updated this script to simply slam in nodes as overall throughput test
+but this is still operating as single statement per transaction
+'''
+
 import random
 import time
 import multiprocessing
@@ -5,7 +10,7 @@ import sys
 from neo4j.v1 import GraphDatabase, basic_auth
 
 driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "password"))
-names = []
+names = ["Al", "Jo", "Ted", "Bob", "Sarah", "Suzy"]
 sessions = []
 
 #txn execution process
@@ -14,14 +19,15 @@ def executeTxns(top, ppid):
     i = 0
     cursession = sessions[ppid]
     while i < top[0]:
-        parameters = {'id': random.randint(1, 3500), 'name': names[random.randint(0, 5)],
-                      'idto': random.randint(1, 3500),
-                      'nameto': names[random.randint(0, 5)]}
+        parameters = {'id': random.randint(1, 200000), 'name': names[random.randint(0, 5)]}
+                      #'idto': random.randint(1, 3500),
+                      #'nameto': names[random.randint(0, 5)]
         with cursession.begin_transaction() as txn:
             try:
-                result = txn.run("MERGE (a:Person {id: {id}, name: {name}}) "
-                        "MERGE (b:Person {id: {idto}, name: {nameto}})"
-                        "MERGE (a)-[:FOLLOWS]->(b)", parameters)
+                result = txn.run("CREATE (a:Person {id: {id}, name: {name}}) "
+                        #"MERGE (b:Person {id: {idto}, name: {nameto}})"
+                        #"MERGE (a)-[:FOLLOWS]->(b)"
+                        , parameters)
                 summary = result.consume()
                 #for record in result:
                     #do absolutely nothing but loop through them
